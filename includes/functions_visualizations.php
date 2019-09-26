@@ -611,6 +611,83 @@ function get_product_price($price,$id_prod="",$method="") {
 
 
 
+function parse__price($price){
+	//$price = number_format((float)$price, 2, '.', ''); //nuevo esto, siempre quiero 2 decimales
+
+	$int = floor($price);
+	$red = round(($price-$int)*100,0);
+	
+	if($red==0) $red="00";
+
+	/*if ($red == 0){
+		return <<<HTML
+		<span>{$int}</span>
+HTML;
+	}
+	else {*/
+	return <<<HTML
+		<span>{$int},<sup>{$red}</sup></span>
+HTML;
+//}
+
+/* <span style="display:none">{$int},<sup>00</sup></span> */
+}
+
+
+function paginar_resultados($pagina="") {
+	global $dbConn;
+	global $query;
+	global $_GET;
+
+	//Limito la busqueda
+	if($_GET['cat']=="admin") $TAMANO_PAGINA = 250;
+	if(isset($_GET['search_query'])) $TAMANO_PAGINA = 12;
+	//if($_GET['search_query']=="moto") $TAMANO_PAGINA = 12;
+	else {
+		$TAMANO_PAGINA = 24;
+	}
+	
+	
+	//examino la página a mostrar y el inicio del registro a mostrar
+	if (empty($pagina) or $pagina==0) $pagina=1;
+	
+	$rs = mysqli_query($dbConn, $query);
+	$num_total_registros = mysqli_num_rows($rs);
+	//calculo el total de páginas
+	$total_paginas = ceil($num_total_registros / $TAMANO_PAGINA);
+
+	$url = getUrl();	
+
+	$text_output = paginar_resultados_view(1);
+
+	//muestro los distintos índices de las páginas, si es que hay varias páginas
+	
+		for ($i = 1; $i <= $total_paginas; ++$i){
+			if($i!=1) $text_output .= " | ";
+			if ($pagina == $i) {
+				$text_output .= $pagina;
+			}
+			else {
+				$text_output .= paginar_resultados_view(2);
+			}
+			}
+	
+	$text_output .= paginar_resultados_view(3);
+	
+	$TAMANO_PAGINA--;
+	
+	$limit_start=$TAMANO_PAGINA*($pagina-1);
+	
+	$query = "$query LIMIT $limit_start,$TAMANO_PAGINA";
+
+	//si no hay resultados:
+	if(empty($num_total_registros) or empty($rs) or $num_total_registros==0) {
+		$text_output = paginar_resultados_view(4);
+	}
+
+	return array("text" => $text_output,"query" => $query);
+}
+
 
  
 ?>
